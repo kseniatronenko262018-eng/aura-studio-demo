@@ -1,0 +1,13 @@
+{
+  "name": "aura-studio-demo",
+  "version": "1.0.0",
+  "description": "Aura Studio - Aesthetic Booking & CRM Demo",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "node-fetch": "^2.7.0"
+  }
+}

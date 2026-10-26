@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="ua" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AURA STUDIO | Демо онлайн-запису та CRM</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .utility-bar, .profile-card, .quick-nav, #step1Card { opacity: 1 !important; transform: none !important; }
+        .demo-tag { display: inline-block; background: var(--accent); color: var(--accent-invert); font-size: 8px; font-weight: 800; padding: 3px 8px; border-radius: 6px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+    </style>
+</head>
+<body data-lang="ua">
+
+    <div class="bg-texture">
+        <img id="bgImageElement" src="https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1200&q=80" alt="Pastel Background">
+    </div>
+
+    <div class="mobile-container">
+        <div class="utility-bar">
+            <span>aura // demo space</span>
+            <div class="controls-group">
+                <button class="control-btn" id="langToggle" onclick="toggleLang()">UA / EN 🌓</button>
+                <button class="control-btn" id="themeToggle" onclick="toggleTheme()">☀️ / 🌙</button>
+            </div>
+        </div>
+
+        <div class="profile-card">
+            <span class="demo-tag">Інтерактивне Демо</span>
+            <div class="avatar-wrap">
+                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80" alt="Aura Studio">
+            </div>
+            <h1>AURA STUDIO</h1>
+            <p>
+                <span class="ua">естетика образу • кастомний догляд</span>
+                <span class="en">hair aesthetics • custom care</span>
+            </p>
+            <div class="profile-bio">
+                <span class="ua">персональний простір краси & автоматизований сервіс</span>
+                <span class="en">personal beauty space & automated booking</span>
+            </div>
+            
+            <a href="/master" target="_blank" style="display:inline-block; margin-top:10px; font-size:9.5px; color:var(--accent); text-decoration:underline; font-weight:700;">
+                👉 Відкрити демо-кабінет майстра (Пароль: 1111)
+            </a>
+        </div>
+
+        <div class="quick-nav" style="grid-template-columns: repeat(3, 1fr);">
+            <div class="nav-chip active" id="navBook" onclick="switchTab('book', this)">
+                <span class="ua">Запис</span><span class="en">Book</span>
+            </div>
+            <div class="nav-chip" onclick="switchTab('works', this)">
+                <span class="ua">Портфоліо</span><span class="en">Portfolio</span>
+            </div>
+            <div class="nav-chip" onclick="switchTab('loc', this)">
+                <span class="ua">Локація</span><span class="en">Location</span>
+            </div>
+        </div>
+
+        <div id="paneBook" class="section-pane active">
+            <!-- КРОК 1 -->
+            <div class="form-card" id="step1Card">
+                <label class="field-label">
+                    <span class="ua">Крок 1. Оберіть категорію послуг</span>
+                    <span class="en">Step 1. Choose service category</span>
+                </label>
+                <div class="services-list">
+                    <div class="service-card-row" id="mainCardCut" onclick="selectMainCategory('cut')">
+                        <div class="service-card-info">
+                            <div class="title"><span class="ua">Авторська стрижка</span><span class="en">Signature haircut</span></div>
+                            <div class="sub"><span class="ua">1200 ₴ • 1.5 год</span><span class="en">1200 ₴ • 1.5 h</span></div>
+                        </div>
+                        <div class="service-radio-indicator"></div>
+                    </div>
+                    <div class="service-card-row" id="mainCardColor" onclick="selectMainCategory('color')">
+                        <div class="service-card-info">
+                            <div class="title"><span class="ua">Трендове фарбування</span><span class="en">Trendy coloring</span></div>
+                            <div class="sub"><span class="ua">Підбір під тон та стан волосся</span><span class="en">Custom shade match</span></div>
+                        </div>
+                        <div class="service-radio-indicator"></div>
+                    </div>
+                    <div class="service-card-row" id="mainCardComplex" onclick="selectMainCategory('complex')">
+                        <div class="service-card-info">
+                            <div class="title"><span class="ua">Стрижка + Тонування</span><span class="en">Haircut + Gloss Toning</span></div>
+                            <div class="sub"><span class="ua">3200 ₴ • 3 год</span><span class="en">3200 ₴ • 3 h</span></div>
+                        </div>
+                        <div class="service-radio-indicator"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- КРОК 2 -->
+            <div class="form-card" id="step2Card" style="opacity: 0.5; pointer-events: none; transition: 0.3s;">
+                <div id="categorySubmenu" style="display: none;">
+                    <label class="field-label"><span class="ua">Крок 2А. Оберіть стан волосся:</span><span class="en">Step 2A. Hair condition:</span></label>
+                    <div id="submenuItems" style="display: flex; flex-direction: column; gap: 6px;"></div>
+                </div>
+
+                <div id="coloringSubOptions" style="display: none;">
+                    <label class="field-label"><span class="ua">Крок 2Б. Послуга та довжина:</span><span class="en">Step 2B. Services & length:</span></label>
+                    <div id="specificServicesList" style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px;"></div>
+                    <div id="lengthContainer" style="display: none;">
+                        <label class="field-label"><span class="ua">Довжина волосся:</span><span class="en">Hair length:</span></label>
+                        <select id="hairLengthSelectUA" class="input-box ua" onchange="updateServiceDetails()">
+                            <option value="shoulders">До плечей</option>
+                            <option value="shoulder_blades">Від плечей до лопаток</option>
+                            <option value="below_blades">Нижче лопаток</option>
+                        </select>
+                        <select id="hairLengthSelectEN" class="input-box en" onchange="updateServiceDetails()">
+                            <option value="shoulders">To shoulders</option>
+                            <option value="shoulder_blades">To shoulder blades</option>
+                            <option value="below_blades">Below shoulder blades</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="accordion-container" style="margin-top: 10px;">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <span><span class="ua">📌 Правила візиту та рекомендації</span><span class="en">📌 Studio rules</span></span>
+                        <span class="accordion-icon">▼</span>
+                    </div>
+                    <div class="accordion-content">
+                        <ul class="notice-list">
+                            <li class="ua">Студія працює за попереднім записом.</li>
+                            <li class="ua">Кава, матча та приємна музика входять у кожен візит.</li>
+                            <li class="en">Private space by appointment only.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div id="photoUploadSection" style="margin-top: 10px;">
+                    <label class="field-label" style="color: var(--accent);">
+                        <span class="ua">📷 Завантажте фото або референс:</span>
+                        <span class="en">📷 Upload hair photo / reference:</span>
+                    </label>
+                    <label for="clientHairPhoto" class="custom-file-upload" id="fileUploadBtn">
+                        <span class="ua">📁 Натисніть, щоб додати файл</span><span class="en">📁 Click to choose file</span>
+                    </label>
+                    <input type="file" id="clientHairPhoto" accept="image/*" onchange="checkPhotoLoaded(this)" style="display: none;">
+                </div>
+            </div>
+
+            <!-- КРОК 3 -->
+            <div class="form-card" id="step3Card" style="opacity: 0.5; pointer-events: none; transition: 0.3s;">
+                <div class="summary-card">
+                    <div class="summary-header">
+                        <span class="field-label" style="margin:0;"><span class="ua">Обрана послуга</span><span class="en">Selected service</span></span>
+                        <span id="summaryPriceBadge" class="summary-price-badge">0 ₴</span>
+                    </div>
+                    <div id="summaryServiceTitle" class="summary-title"><span class="ua">Оберіть послугу вище</span><span class="en">Choose service above</span></div>
+                    <div id="summaryMeta" class="summary-meta" style="display: none;">
+                        <span>⏱ <span id="summaryDuration">1.5 год</span></span>
+                        <span>📅 <span id="summaryDateTime">Дата не обрана</span></span>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="field-label"><span class="ua">Дата візиту</span><span class="en">Date of visit</span></label>
+                    <div class="custom-calendar-grid" id="customCalendarGrid"></div>
+                </div>
+
+                <div>
+                    <label class="field-label"><span class="ua">Доступні слоти часу (крок 30 хв)</span><span class="en">Available time slots</span></label>
+                    <div class="time-grid" id="timeSlotsGrid"></div>
+                </div>
+
+                <div class="form-row">
+                    <div>
+                        <label class="field-label"><span class="ua">Ім'я</span><span class="en">Name</span></label>
+                        <input type="text" id="clientName" class="input-box" data-ph-ua="Ваше ім'я" data-ph-en="Your name" placeholder="Ваше ім'я">
+                    </div>
+                    <div>
+                        <label class="field-label"><span class="ua">Телефон</span><span class="en">Phone</span></label>
+                        <input type="tel" id="clientPhone" class="input-box" data-ph-ua="+380..." data-ph-en="+380..." placeholder="+380...">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div>
+                        <label class="field-label" style="color: var(--accent);"><span class="ua">Email</span><span class="en">Email</span></label>
+                        <input type="email" id="clientEmail" class="input-box" placeholder="demo@example.com">
+                    </div>
+                    <div>
+                        <label class="field-label"><span class="ua">Нік у соцмережі</span><span class="en">Social tag</span></label>
+                        <input type="text" id="clientSocial" class="input-box" data-ph-ua="@username" data-ph-en="@username" placeholder="@username">
+                    </div>
+                </div>
+
+                <!-- ПЕРЕМИКАЧ СТАТУСУ -->
+                <div style="margin-top: 6px;">
+                    <label class="field-label">
+                        <span class="ua">Оберіть статус (для тесту):</span>
+                        <span class="en">Choose status:</span>
+                    </label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                        <div class="sub-service-card selected" id="clientTypeNew" onclick="selectClientType('new')">
+                            <div style="text-align: center; width: 100%;">
+                                <div class="s-title"><span class="ua">✨ Новий клієнт</span><span class="en">✨ New client</span></div>
+                                <div class="s-sub"><span class="ua">Тест Monobank 500 ₴</span><span class="en">Test deposit</span></div>
+                            </div>
+                        </div>
+                        <div class="sub-service-card" id="clientTypeRegular" onclick="selectClientType('regular')">
+                            <div style="text-align: center; width: 100%;">
+                                <div class="s-title"><span class="ua">💎 Постійний</span><span class="en">💎 Regular</span></div>
+                                <div class="s-sub"><span class="ua">Без передплати (0 ₴)</span><span class="en">0 deposit</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="notice-badge" id="clientTypeNotice">
+                    <span class="ua">⚡ <b>Демо-режим:</b> Завдаток 500 грн буде симульовано без списання реальних коштів.</span>
+                    <span class="en">⚡ <b>Demo mode:</b> Monobank 500 UAH deposit will be simulated for free.</span>
+                </div>
+
+                <button class="btn-main" id="mainBookBtn" onclick="submitBooking()">
+                    <span class="ua">Сплатити завдаток 500 ₴ (Тест)</span>
+                    <span class="en">Pay deposit (Test simulation)</span>
+                </button>
+            </div>
+        </div>
+
+        <div id="paneWorks" class="section-pane">
+            <div class="form-card">
+                <label class="field-label" style="text-align: center;"><span class="ua">✨ Портфоліо робіт студії</span><span class="en">✨ Portfolio</span></label>
+                <div class="works-grid-full" id="publicWorksGrid"></div>
+            </div>
+        </div>
+
+        <div id="paneLoc" class="section-pane">
+            <div class="info-card">
+                <span class="ua">📍 <b>Локація:</b> вул. Володимира Вернадського, 35-Б.<br><br>Естетичний простір, де кожна деталь продумана для вашого комфорту.<br></span>
+                <span class="en">📍 <b>Location:</b> Volodymyra Vernadskoho st., 35-B.<br><br>Private aesthetic space.<br></span>
+                <a href="https://maps.google.com" target="_blank" class="map-btn"><span class="ua">Відкрити локацію на карті</span><span class="en">Open in Maps</span></a>
+            </div>
+        </div>
+        
+        <div class="sticky-cta" id="stickyCta">
+            <button class="btn-main" onclick="scrollToBooking()">
+                <span class="ua">⚡ Забронювати час</span><span class="en">⚡ Book an appointment</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ДЕМО-МОДАЛКА ТЕСТОВОЇ ОПЛАТИ MONOBANK -->
+    <div id="demoPaymentModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); z-index: 999999; justify-content: center; align-items: center; padding: 16px;">
+        <div class="demo-bank-modal">
+            <div style="font-size: 32px; margin-bottom: 8px;">🏦</div>
+            <h3 style="font-size: 14px; font-family:'Syne',sans-serif; text-transform:uppercase; margin-bottom: 4px;">Monobank Еквайринг</h3>
+            <div style="font-size: 10px; color: var(--text-muted); margin-bottom: 14px;">Симуляція оплати без списання реальних коштів</div>
+            
+            <div style="background: var(--card-hover); padding: 12px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 16px;">
+                <div style="font-size: 9px; color: var(--text-muted);">Призначення:</div>
+                <div style="font-size: 11px; font-weight: 700; color: var(--text-main);">Завдаток за бронь візиту</div>
+                <div style="font-size: 18px; font-weight: 800; color: var(--accent); margin-top: 4px;">500.00 ₴</div>
+            </div>
+
+            <button type="button" class="btn-main" onclick="confirmDemoPayment()" style="margin-bottom: 8px;">
+                ✅ Підтвердити успішну оплату (Тест)
+            </button>
+            <button type="button" onclick="closeDemoPayment()" style="background: none; border: none; font-size: 10px; color: var(--text-muted); cursor: pointer;">
+                Скасувати платіж
+            </button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        let publicWorksCache = [];
+        async function loadPublicWorks() {
+            try {
+                let res = await fetch('/api/works?t=' + Date.now());
+                publicWorksCache = await res.json();
+                let grid = document.getElementById('publicWorksGrid');
+                if (grid && Array.isArray(publicWorksCache)) {
+                    grid.innerHTML = publicWorksCache.map(w => `
+                        <div class="works-carousel-item">
+                            <img src="${w.image}" alt="${w.title || 'Робота'}">
+                        </div>
+                    `).join('');
+                }
+            } catch(e) {}
+        }
+        window.addEventListener('DOMContentLoaded', loadPublicWorks);
+    </script>
+</body>
+</html>

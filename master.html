@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="ua" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Aura CRM | Кабінет майстра (Демо)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        :root[data-theme="dark"] {
+            --accent: #d4a59a; --accent-invert: #1c1917; --tg-bg: #1c1917;
+            --tg-card: rgba(36, 32, 29, 0.88); --tg-card-hover: rgba(48, 43, 39, 0.94);
+            --tg-border: rgba(255, 255, 255, 0.1); --tg-text: #f5f1eb; --tg-muted: #a39990;
+        }
+        body { background-color: var(--tg-bg) !important; color: var(--tg-text) !important; padding-bottom: 50px; min-height: 100vh; margin: 0; }
+        .master-section, .form-card { background: var(--tg-card) !important; border: 1px solid var(--tg-border) !important; border-radius: 20px !important; display: flex; flex-direction: column; width: 100%; box-sizing: border-box; }
+        .master-utility-bar { display: flex; justify-content: space-between; align-items: center; padding: 8px 4px; margin-bottom: 12px; }
+        .korea-nav-bar { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 12px; scrollbar-width: none; }
+        .korea-nav-chip { background: var(--tg-card); border: 1px solid var(--tg-border); padding: 10px 14px; border-radius: 14px; font-size: 9px; font-weight: 700; color: var(--tg-muted); text-transform: uppercase; cursor: pointer; white-space: nowrap; }
+        .korea-nav-chip.active { background: var(--accent); color: var(--accent-invert); border-color: var(--accent); }
+        .crm-calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; width: 100%; box-sizing: border-box; }
+        .crm-cal-cell { background: var(--tg-card-hover); border: 1px solid var(--tg-border); border-radius: 8px; padding: 8px 2px; text-align: center; font-size: 9px; font-weight: 700; cursor: pointer; }
+        .crm-cal-cell.selected { background: var(--accent); color: var(--accent-invert); }
+        .crm-cal-cell.blocked { background: rgba(212, 165, 154, 0.2); text-decoration: line-through; }
+        .booking-card-item { background: var(--tg-card-hover); border: 1px solid var(--tg-border); border-radius: 12px; padding: 10px; font-size: 10px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; margin-bottom: 6px; }
+    </style>
+</head>
+<body>
+
+    <!-- ВХІД З ПІДКАЗКОЮ ПАРОЛЯ 1111 -->
+    <div id="authOverlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--tg-bg); z-index: 9999999; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px;">
+        <div style="background: var(--tg-card); border: 1.5px solid var(--accent); padding: 24px; border-radius: 20px; text-align: center; width: 100%; max-width: 320px; box-shadow: 0 12px 40px rgba(0,0,0,0.3);">
+            <h3 style="font-family: 'Syne', sans-serif; font-size: 16px; margin-bottom: 6px; color: var(--tg-text);">Aura CRM // Демо</h3>
+            <div style="font-size: 10px; color: var(--accent); margin-bottom: 14px; font-weight: 700;">
+                🔑 Пароль для тесту: <b>1111</b>
+            </div>
+            <input type="password" id="masterPass" class="input-box" placeholder="Введіть пароль" value="1111" style="text-align: center; font-size: 14px; letter-spacing: 2px; width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--tg-border); background: var(--tg-card-hover); color: white; margin-bottom: 16px;">
+            <button type="button" id="loginBtn" class="btn-main" onclick="checkMasterPass()" style="width: 100%; padding: 14px; border-radius: 12px; background: var(--accent); color: var(--accent-invert); font-weight: bold; border: none; cursor: pointer;">Увійти в кабінет</button>
+        </div>
+    </div>
+
+    <script>
+        async function checkMasterPass() {
+            let pass = document.getElementById('masterPass').value.trim();
+            let res = await fetch('/api/verify-master', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ password: pass })
+            });
+            let data = await res.json();
+            if (data.success) {
+                document.getElementById('authOverlay').style.display = 'none';
+            } else {
+                alert(data.error);
+            }
+        }
+    </script>
+
+    <div class="mobile-container master-body" style="z-index: 10; position: relative; padding: 14px;">
+        <div class="master-utility-bar">
+            <span style="font-family:'Syne',sans-serif; font-size:12px; font-weight:800; color:var(--tg-text);">AURA STUDIO // DEMO CRM</span>
+            <a href="/" style="font-size: 9px; color: var(--accent); text-decoration: underline;">На сайт клієнта ➔</a>
+        </div>
+
+        <div id="masterDashboard" style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
+            <div class="korea-nav-bar" id="koreaNavContainer">
+                <div class="korea-nav-chip active" onclick="switchMasterSection('secCalendar', this)">📅 Календар</div>
+                <div class="korea-nav-chip" onclick="switchMasterSection('secFinances', this)">💰 Фінанси</div>
+                <div class="korea-nav-chip" onclick="switchMasterSection('secClients', this)">👥 Клієнти</div>
+                <div class="korea-nav-chip" onclick="switchMasterSection('secWorks', this)">✨ Роботи</div>
+            </div>
+
+            <!-- СТАТИСТИКА -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%;">
+                <div class="form-card master-section" style="padding: 12px; text-align: center;">
+                    <div style="font-size: 8px; color: var(--tg-muted);">АКТИВНИХ ЗАПИСІВ</div>
+                    <div id="totalBookingsCountBadge" style="font-size: 15px; font-weight: 700; color: var(--accent);">0</div>
+                </div>
+                <div class="form-card master-section" style="padding: 12px; text-align: center;">
+                    <div style="font-size: 8px; color: var(--tg-muted);">БАЗА КЛІЄНТІВ</div>
+                    <div id="totalClientsCountBadge" style="font-size: 15px; font-weight: 700; color: var(--accent);">0</div>
+                </div>
+            </div>
+
+            <!-- КАЛЕНДАР -->
+            <div id="secCalendar" class="master-section form-card" style="padding: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; width: 100%;">
+                    <button type="button" class="control-btn" onclick="changeMonth(-1)">◀</button>
+                    <h3 id="calendarTitle" style="font-size: 12px; font-family:'Syne',sans-serif;">Місяць</h3>
+                    <button type="button" class="control-btn" onclick="changeMonth(1)">▶</button>
+                </div>
+                <div id="calendarGridContainer" class="crm-calendar-grid"></div>
+                
+                <button type="button" class="control-btn" id="blockDayBtn" onclick="toggleBlockSelectedDate()" style="width: 100%; margin-top: 12px; padding: 14px; border-radius: 12px; font-weight: 700; color: var(--accent); background: var(--tg-card-hover); border: 1.5px solid var(--tg-border);">
+                    🔒 Заблокувати день (вихідний)
+                </button>
+
+                <div style="margin-top: 12px; width: 100%;">
+                    <label class="field-label" id="selectedDateLabel" style="color:var(--tg-muted); font-size: 9px; display: block; margin-bottom: 6px;">Записи на день:</label>
+                    <div id="dayBookingsContainer" style="display: flex; flex-direction: column; width: 100%;"></div>
+                </div>
+            </div>
+
+            <!-- ФІНАНСИ -->
+            <div id="secFinances" class="master-section form-card" style="display: none; padding: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; background: var(--tg-card-hover); padding: 8px 12px; border-radius: 12px; border: 1px solid var(--tg-border);">
+                    <button type="button" class="control-btn" style="background: none; border: none; color: white;" onclick="changeFinanceMonth(-1)">◀</button>
+                    <h3 id="financeMonthTitle" style="font-size: 11px; font-family:'Syne',sans-serif; text-transform:uppercase; margin: 0; color: var(--accent);">Жовтень 2026</h3>
+                    <button type="button" class="control-btn" style="background: none; border: none; color: white;" onclick="changeFinanceMonth(1)">▶</button>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; text-align: center;">
+                    <div style="background:var(--tg-card-hover); padding:8px 4px; border-radius:10px;">
+                        <div style="font-size:7.5px; color:var(--tg-muted);">ДОХІД</div>
+                        <div id="statCompleted" style="font-size:11px; font-weight:700; margin-top: 2px;">0 ₴</div>
+                    </div>
+                    <div style="background:var(--tg-card-hover); padding:8px 4px; border-radius:10px;">
+                        <div style="font-size:7.5px; color:var(--tg-muted);">ВИТРАТИ</div>
+                        <div id="statExpenses" style="font-size:11px; font-weight:700; color:var(--accent); margin-top: 2px;">0 ₴</div>
+                    </div>
+                    <div style="background:var(--tg-card-hover); padding:8px 4px; border-radius:10px;">
+                        <div style="font-size:7.5px; color:var(--tg-muted);">ПРИБУТОК</div>
+                        <div id="statNetProfit" style="font-size:11px; font-weight:700; color:#4ade80; margin-top: 2px;">0 ₴</div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 14px; border-top: 1px solid var(--tg-border); padding-top: 12px;">
+                    <label class="field-label" style="font-size: 9px;">Додати витрату:</label>
+                    <div style="display: flex; gap: 6px; margin-bottom: 6px;">
+                        <input type="text" id="expenseNameInput" style="flex: 1; padding: 8px; border-radius: 8px; border: 1px solid var(--tg-border); background: var(--tg-card-hover); color: white; font-size: 10px;" placeholder="Розхідники">
+                        <input type="number" id="expenseAmountInput" style="width: 80px; padding: 8px; border-radius: 8px; border: 1px solid var(--tg-border); background: var(--tg-card-hover); color: white; font-size: 10px;" placeholder="Сума">
+                        <button type="button" style="padding: 8px 14px; border-radius: 8px; background: var(--accent); color: var(--accent-invert); border: none; font-weight: bold;" onclick="addExpense()">+</button>
+                    </div>
+                    <div id="expensesListContainer" style="display: flex; flex-direction: column; gap: 4px; max-height: 100px; overflow-y: auto;"></div>
+                </div>
+
+                <button type="button" style="margin-top: 14px; width: 100%; padding: 12px; border-radius: 12px; background: #217346; color: white; border: none; font-weight: bold; cursor: pointer;" onclick="exportToExcel()">
+                    📥 Експортувати звіт у Excel (.xlsx)
+                </button>
+            </div>
+
+            <!-- КЛІЄНТИ -->
+            <div id="secClients" class="master-section form-card" style="display: none; padding: 16px;">
+                <h3 style="font-size: 13px; font-family:'Syne',sans-serif; text-transform:uppercase; margin-bottom: 8px;">База постійних клієнтів</h3>
+                <div style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px;">
+                    <input type="text" id="regClientName" style="padding: 8px; border-radius: 8px; border: 1px solid var(--tg-border); background: var(--tg-card-hover); color: white; font-size: 10px;" placeholder="Ім'я клієнта">
+                    <input type="tel" id="regClientPhone" style="padding: 8px; border-radius: 8px; border: 1px solid var(--tg-border); background: var(--tg-card-hover); color: white; font-size: 10px;" placeholder="Телефон (+380...)">
+                    <button type="button" style="padding: 10px; border-radius: 10px; background: var(--accent); color: var(--accent-invert); border: none; font-weight: bold;" onclick="addRegularClientManual()">+ Додати клієнта</button>
+                </div>
+                <div id="regularClientsContainer" style="display: flex; flex-direction: column; gap: 4px; max-height: 180px; overflow-y: auto;"></div>
+            </div>
+
+            <!-- РОБОТИ -->
+            <div id="secWorks" class="master-section form-card" style="display: none; padding: 16px;">
+                <h3 style="font-size: 13px; font-family:'Syne',sans-serif; text-transform:uppercase; margin-bottom: 8px;">Портфоліо</h3>
+                <div id="masterWorksList" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; max-height: 300px; overflow-y: auto;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentMasterDate = new Date();
+        let currentFinanceDate = new Date();
+        let selectedCrmDate = new Date().toISOString().split('T')[0];
+        let allBookingsCache = [];
+        let blockedDaysCache = [];
+        const monthsUa = ["Січень", "Лютий", "Березень", "Квітень", "Травень", "Червень", "Липень", "Серпень", "Вересень", "Жовтень", "Листопад", "Грудень"];
+
+        window.addEventListener('DOMContentLoaded', () => {
+            refreshCrmData();
+            loadMasterWorks();
+            renderRegularClientsList();
+        });
+
+        async function refreshCrmData() {
+            let resB = await fetch('/api/bookings');
+            allBookingsCache = await resB.json() || [];
+
+            let resD = await fetch('/api/blocked-days');
+            blockedDaysCache = await resD.json() || [];
+
+            document.getElementById('totalBookingsCountBadge').innerText = allBookingsCache.length;
+            renderCrmCalendar();
+            renderSelectedDayBookings();
+            updateFinancesAndExpenses();
+        }
+
+        function switchMasterSection(sectionId, el) {
+            document.querySelectorAll('.master-section').forEach(s => s.style.display = 'none');
+            document.getElementById(sectionId).style.display = 'flex';
+            document.querySelectorAll('.korea-nav-chip').forEach(i => i.classList.remove('active'));
+            if(el) el.classList.add('active');
+        }
+
+        function changeMonth(dir) {
+            currentMasterDate.setMonth(currentMasterDate.getMonth() + dir);
+            renderCrmCalendar();
+        }
+
+        function changeFinanceMonth(dir) {
+            currentFinanceDate.setMonth(currentFinanceDate.getMonth() + dir);
+            updateFinancesAndExpenses();
+        }
+
+        function renderCrmCalendar() {
+            let container = document.getElementById('calendarGridContainer');
+            if (!container) return;
+            container.innerHTML = '';
+
+            let year = currentMasterDate.getFullYear();
+            let month = currentMasterDate.getMonth();
+            document.getElementById('calendarTitle').innerText = `${monthsUa[month]} ${year}`;
+
+            let firstDayIndex = new Date(year, month, 1).getDay();
+            firstDayIndex = (firstDayIndex === 0) ? 6 : firstDayIndex - 1;
+            let totalDays = new Date(year, month + 1, 0).getDate();
+
+            const daysNames = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд"];
+            daysNames.forEach(d => {
+                let lbl = document.createElement('div');
+                lbl.style.cssText = "font-size:8px; color:var(--tg-muted); text-align:center; font-weight:700; padding-bottom:4px;";
+                lbl.innerText = d;
+                container.appendChild(lbl);
+            });
+
+            for (let i = 0; i < firstDayIndex; i++) container.appendChild(document.createElement('div'));
+
+            for (let day = 1; day <= totalDays; day++) {
+                let dStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                let cell = document.createElement('div');
+                cell.className = 'crm-cal-cell';
+                if (dStr === selectedCrmDate) cell.classList.add('selected');
+                if (blockedDaysCache.includes(dStr)) cell.classList.add('blocked');
+
+                let hasBookings = allBookingsCache.some(b => b.date === dStr);
+                cell.innerHTML = `<div>${day}</div>` + (hasBookings ? `<div style="font-size:6px; color:var(--accent);">● запис</div>` : '');
+
+                cell.onclick = () => {
+                    selectedCrmDate = dStr;
+                    renderCrmCalendar();
+                    renderSelectedDayBookings();
+                };
+                container.appendChild(cell);
+            }
+            updateBlockButtonState();
+        }
+
+        function renderSelectedDayBookings() {
+            let container = document.getElementById('dayBookingsContainer');
+            document.getElementById('selectedDateLabel').innerText = `Записи на ${selectedCrmDate}:`;
+
+            let dayBooks = allBookingsCache.filter(b => b.date === selectedCrmDate);
+            if (dayBooks.length === 0) {
+                container.innerHTML = `<div style="font-size:9px; color:var(--tg-muted); text-align:center; padding:8px;">Немає записів</div>`;
+                return;
+            }
+
+            container.innerHTML = dayBooks.map(b => `
+                <div class="booking-card-item">
+                    <div><b>🕐 ${b.time}</b> — ${b.name} (${b.phone})<br>
+                    <span style="font-size:8px; color:var(--tg-muted);">${b.service} • ${b.price} ₴ ${b.isRegular ? '• 💎 Постійний' : '• 💳 Завдаток 500 ₴'}</span></div>
+                    <button onclick="cancelBooking(${b.id})" style="background:none; border:none; color:#e63946; cursor:pointer;">✕</button>
+                </div>
+            `).join('');
+        }
+
+        async function cancelBooking(id) {
+            await fetch('/api/cancel-booking', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ id })
+            });
+            refreshCrmData();
+        }
+
+        async function toggleBlockSelectedDate() {
+            let isBlocked = blockedDaysCache.includes(selectedCrmDate);
+            let endpoint = isBlocked ? '/api/unblock-day' : '/api/block-day';
+            let res = await fetch(endpoint, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ date: selectedCrmDate })
+            });
+            let data = await res.json();
+            blockedDaysCache = data.blockedDays;
+            renderCrmCalendar();
+            alert(isBlocked ? "🔓 День розблоковано!" : "🔒 День заблоковано!");
+        }
+
+        function updateBlockButtonState() {
+            let btn = document.getElementById('blockDayBtn');
+            if (!btn) return;
+            if (blockedDaysCache.includes(selectedCrmDate)) {
+                btn.innerText = `🔓 Розблокувати ${selectedCrmDate}`;
+            } else {
+                btn.innerText = `🔒 Заблокувати ${selectedCrmDate} (вихідний)`;
+            }
+        }
+
+        function updateFinancesAndExpenses() {
+            let year = currentFinanceDate.getFullYear();
+            let month = currentFinanceDate.getMonth();
+            let monthKey = `${year}-${String(month + 1).padStart(2, '0')}`;
+            document.getElementById('financeMonthTitle').innerText = `${monthsUa[month]} ${year}`;
+
+            let monthBookings = allBookingsCache.filter(b => (b.date || '').startsWith(monthKey));
+            let totalIncome = monthBookings.reduce((sum, b) => sum + Number(b.price || 0), 0);
+            
+            let expenses = JSON.parse(localStorage.getItem('aura_demo_expenses') || '[]');
+            let totalExpenses = expenses.reduce((sum, e) => sum + Number(e.amount || 0), 0);
+            let net = totalIncome - totalExpenses;
+
+            document.getElementById('statCompleted').innerText = totalIncome + " ₴";
+            document.getElementById('statExpenses').innerText = totalExpenses + " ₴";
+            document.getElementById('statNetProfit').innerText = net + " ₴";
+
+            document.getElementById('expensesListContainer').innerHTML = expenses.map((e, idx) => `
+                <div style="display:flex; justify-content:space-between; font-size:9px; background:var(--tg-card-hover); padding:6px 10px; border-radius:8px;">
+                    <span>${e.name} — <b>${e.amount} ₴</b></span>
+                    <button onclick="removeExpense(${idx})" style="background:none; border:none; color:var(--tg-muted); cursor:pointer;">✕</button>
+                </div>
+            `).join('');
+        }
+
+        function addExpense() {
+            let name = document.getElementById('expenseNameInput').value.trim();
+            let amount = document.getElementById('expenseAmountInput').value.trim();
+            if (!name || !amount) return;
+            let expenses = JSON.parse(localStorage.getItem('aura_demo_expenses') || '[]');
+            expenses.push({ name, amount: Number(amount) });
+            localStorage.setItem('aura_demo_expenses', JSON.stringify(expenses));
+            document.getElementById('expenseNameInput').value = '';
+            document.getElementById('expenseAmountInput').value = '';
+            updateFinancesAndExpenses();
+        }
+
+        function removeExpense(idx) {
+            let expenses = JSON.parse(localStorage.getItem('aura_demo_expenses') || '[]');
+            expenses.splice(idx, 1);
+            localStorage.setItem('aura_demo_expenses', JSON.stringify(expenses));
+            updateFinancesAndExpenses();
+        }
+
+        function exportToExcel() {
+            let wb = XLSX.utils.book_new();
+            let ws = XLSX.utils.json_to_sheet(allBookingsCache);
+            XLSX.utils.book_append_sheet(wb, ws, "Записи клієнтів");
+            XLSX.writeFile(wb, "Aura_CRM_Report.xlsx");
+        }
+
+        async function renderRegularClientsList() {
+            let res = await fetch('/api/clients');
+            let clients = await res.json() || [];
+            document.getElementById('totalClientsCountBadge').innerText = clients.length;
+            document.getElementById('regularClientsContainer').innerHTML = clients.map(c => `
+                <div style="display:flex; justify-content:space-between; font-size:10px; background:var(--tg-card-hover); padding:8px 12px; border-radius:8px; margin-bottom:4px;">
+                    <div><b>${c.name}</b> (${c.phone})</div>
+                    <button onclick="deleteClient(${c.id})" style="background:none; border:none; color:#e63946; cursor:pointer;">✕</button>
+                </div>
+            `).join('');
+        }
+
+        async function addRegularClientManual() {
+            let name = document.getElementById('regClientName').value.trim();
+            let phone = document.getElementById('regClientPhone').value.trim();
+            if (!name || !phone) return alert("Введіть ім'я та телефон");
+            await fetch('/api/clients', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ name, phone })
+            });
+            document.getElementById('regClientName').value = '';
+            document.getElementById('regClientPhone').value = '';
+            renderRegularClientsList();
+        }
+
+        async function deleteClient(id) {
+            await fetch('/api/delete-client', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ id })
+            });
+            renderRegularClientsList();
+        }
+
+        async function loadMasterWorks() {
+            let res = await fetch('/api/works');
+            let works = await res.json() || [];
+            document.getElementById('masterWorksList').innerHTML = works.map(w => `
+                <div style="height:120px; border-radius:12px; overflow:hidden;">
+                    <img src="${w.image}" style="width:100%; height:100%; object-fit:cover;">
+                </div>
+            `).join('');
+        }
+    </script>
+</body>
+</html>
